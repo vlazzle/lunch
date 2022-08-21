@@ -10,9 +10,12 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rxjava3.subscribeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.alltrails.lunch.R
 import com.alltrails.lunch.backend.NearbySearchResponse
+import com.alltrails.lunch.core.LatLng
 import com.alltrails.lunch.core.Lce
 import com.alltrails.lunch.ui.theme.LunchTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -36,7 +39,7 @@ class MainActivity : ComponentActivity() {
                         is Lce.Initial -> {
                         }
                         is Lce.Loading -> {
-                            Text(text = "loading")
+                            Text(text = stringResource(R.string.loading))
                         }
                         is Lce.Content -> PlacesList(places = places.content)
                         is Lce.Error -> {

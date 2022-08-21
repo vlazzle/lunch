@@ -21,7 +21,7 @@ class PlacesRepository @Inject constructor(
                 if (response.status == NearbySearchResponse.PlacesSearchStatus.OK) {
                     Lce.Content(response.results)
                 } else {
-                    Lce.Error(Throwable(response.status.toString()))
+                    Lce.Error(Throwable("${response.status}: ${response.error_message}"))
                 }
             }
             .startWithItem(Lce.Loading())
