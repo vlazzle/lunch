@@ -27,7 +27,8 @@ object ServiceModule {
                 val originalRequest = chain.request()
                 val url = originalRequest.url.newBuilder()
                     .addQueryParameter("key", BuildConfig.MAPS_API_KEY)
-                    .addQueryParameter("radius", "400")
+                    // Set rankby=distance because https://github.com/googlemaps/openapi-specification/pull/364
+                    .addQueryParameter("rankby", "distance")
                     .build()
                 val newRequest = originalRequest.newBuilder()
                     .url(url)
