@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Lunch</string>
+    <!-- mapbox_access_token is a public token, it can stay checked in here -->
+    <string name="mapbox_access_token" translatable="false">pk.eyJ1IjoidmxhenpsZSIsImEiOiJjamF5bmh1cnYwZjRxMzJvNm0wcXhuYmxxIn0.loSwZS_Y1Z21cUXihZm-eA</string>
+    <!-- This should be secret, so not checked in. Remember to deactive this token later. -->
+    <string name="mapbox_downloads_token" translatable="false">sk.eyJ1IjoidmxhenpsZSIsImEiOiJjbDczcjd1ZTUwMDR5M29sZWR3Y3NpaWFjIn0.B_tcScuS67uBLZkytRCEPg</string>
+    <!-- another maps_key_key is AIzaSyB4gMpM6wO1vpvXVvqx57PdR8UUcKFQq9I -->
+    <string name="maps_api_key" translatable="false">AIzaSyCqWHKkgLxJiSwS63bxfWpQ-XhSQs65H5c</string>
 </resources>

@@ -1,12 +1,15 @@
 package com.alltrails.lunch.backend.di
 
+import android.content.Context
 import com.alltrails.lunch.BuildConfig
+import com.alltrails.lunch.R
 import com.alltrails.lunch.backend.PlacesService
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -22,14 +25,13 @@ object ServiceModule {
 
     @Singleton
     @Provides
-    fun providePlacesService(): PlacesService {
+    fun providePlacesService(@ApplicationContext context: Context): PlacesService {
         // TODO: use multibindings for interceptors
         val httpClientBuilder = OkHttpClient.Builder()
             .addInterceptor { chain ->
                 val originalRequest = chain.request()
                 val url = originalRequest.url.newBuilder()
-                    // TODO: move this constant somewhere we can check it in: AIzaSyCqWHKkgLxJiSwS63bxfWpQ-XhSQs65H5c
-                    .addQueryParameter("key", BuildConfig.MAPS_API_KEY)
+                    .addQueryParameter("key", context.getString(R.string.maps_api_key))
                     // Set rankby=distance because https://github.com/googlemaps/openapi-specification/pull/364
                     .addQueryParameter("rankby", "distance")
                     .build()
