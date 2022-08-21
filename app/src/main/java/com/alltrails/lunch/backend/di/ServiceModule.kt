@@ -28,6 +28,7 @@ object ServiceModule {
             .addInterceptor { chain ->
                 val originalRequest = chain.request()
                 val url = originalRequest.url.newBuilder()
+                    // TODO: move this constant somewhere we can check it in: AIzaSyCqWHKkgLxJiSwS63bxfWpQ-XhSQs65H5c
                     .addQueryParameter("key", BuildConfig.MAPS_API_KEY)
                     // Set rankby=distance because https://github.com/googlemaps/openapi-specification/pull/364
                     .addQueryParameter("rankby", "distance")
