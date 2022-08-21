@@ -24,10 +24,9 @@ class PlacesRepository @Inject constructor(
                     Lce.Error(Throwable("${response.status}: ${response.error_message}"))
                 }
             }
-            .startWithItem(Lce.Loading())
         // TODO: caching/multicasting
-//            .publish()
-//            .autoConnect()
-            // TODO: handle network errors
+        //  .replay()
+        //  .autoConnect()
+        // TODO: handle network errors
     }
 }
