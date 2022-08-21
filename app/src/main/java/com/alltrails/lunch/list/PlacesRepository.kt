@@ -1,11 +1,14 @@
 package com.alltrails.lunch.list
 
-import com.alltrails.lunch.app.PlacesService
+import com.alltrails.lunch.backend.NearbySearchResponse
+import com.alltrails.lunch.backend.PlacesService
 import com.alltrails.lunch.core.LatLng
 import com.alltrails.lunch.core.Lce
 import io.reactivex.rxjava3.core.Observable
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class PlacesRepository @Inject constructor(
     private val placesService: PlacesService
 ) {

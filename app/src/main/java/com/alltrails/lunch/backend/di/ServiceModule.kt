@@ -1,7 +1,7 @@
-package com.alltrails.lunch.app.di
+package com.alltrails.lunch.backend.di
 
 import com.alltrails.lunch.BuildConfig
-import com.alltrails.lunch.app.PlacesService
+import com.alltrails.lunch.backend.PlacesService
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -14,11 +14,13 @@ import retrofit2.Retrofit
 import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.create
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object ServiceModule {
 
+    @Singleton
     @Provides
     fun providePlacesService(): PlacesService {
         // TODO: use multibindings for interceptors

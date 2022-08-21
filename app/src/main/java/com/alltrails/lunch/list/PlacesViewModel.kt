@@ -1,6 +1,7 @@
 package com.alltrails.lunch.list
 
 import androidx.lifecycle.ViewModel
+import com.alltrails.lunch.backend.NearbySearchResponse
 import com.alltrails.lunch.core.LatLng
 import com.alltrails.lunch.core.Lce
 import dagger.hilt.android.lifecycle.HiltViewModel

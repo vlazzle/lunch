@@ -1,4 +1,4 @@
-package com.alltrails.lunch.list
+package com.alltrails.lunch.backend
 
 class NearbySearchResponse(
     val html_attributions: List<String>,

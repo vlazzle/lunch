@@ -12,6 +12,7 @@ import androidx.compose.runtime.rxjava3.subscribeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.alltrails.lunch.backend.NearbySearchResponse
 import com.alltrails.lunch.core.Lce
 import com.alltrails.lunch.ui.theme.LunchTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -50,7 +51,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun PlacesList(places: List<NearbySearchResponse.Place>) {
-    Text(text = "${places.take(10).map { it.name }.joinToString("\n")}")
+    Text(text = places.take(20).map { it.name }.joinToString("\n"))
 }
 
 @Preview(showBackground = true)
