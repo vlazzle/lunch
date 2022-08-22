@@ -22,7 +22,27 @@ class LocationRepository @Inject constructor(
 
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION])
     fun location(): Observable<Location> {
-        return Observable.create { emitter ->
+        // Ideally we wouldn't need fastCurrentLocation, we'd use futureLocationUpdates for everything including the
+        //  initial location. Unfortunately however, requestLocationUpdates is slower than getLastLocation to invoke
+        //  LocationEngineCallback.
+        val fastCurrentLocation: Observable<Location> = Observable.create { emitter ->
+            val locationCallback = object : LocationEngineCallback<LocationEngineResult?> {
+                override fun onSuccess(result: LocationEngineResult?) {
+                    result?.lastLocation?.let {
+                        emitter.onNext(it)
+                    }
+                    emitter.onComplete()
+                }
+
+                override fun onFailure(exception: Exception) {
+                    emitter.onError(exception)
+                }
+            }
+
+            locationEngine.getLastLocation(locationCallback)
+        }
+
+        val futureLocationUpdates: Observable<Location> = Observable.create { emitter ->
             val request = LocationEngineRequest.Builder(500L)
                 .setMaxWaitTime(2000L)
                 .build()
@@ -43,6 +63,8 @@ class LocationRepository @Inject constructor(
                 locationEngine.removeLocationUpdates(locationCallback)
             }
         }
+
+        return Observable.merge(fastCurrentLocation, futureLocationUpdates)
     }
 
     private fun getLooper(): Looper {
