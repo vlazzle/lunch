@@ -15,7 +15,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.alltrails.lunch.R
 import com.alltrails.lunch.backend.NearbySearchResponse
-import com.alltrails.lunch.core.LatLng
 import com.alltrails.lunch.core.Lce
 import com.alltrails.lunch.ui.theme.LunchTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -28,6 +27,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             LunchTheme {
                 val placesViewModel: PlacesViewModel = hiltViewModel()
+                // TODO: test both onLocationPermissionGranted first and nearbySearch first
+                placesViewModel.onLocationPermissionGranted()
                 val placesLce = placesViewModel.nearbySearch().subscribeAsState(Lce.initial())
 
                 // A surface container using the 'background' color from the theme
