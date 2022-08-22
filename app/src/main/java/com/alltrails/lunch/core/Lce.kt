@@ -1,5 +1,16 @@
 package com.alltrails.lunch.core
 
+/**
+ * Initial (have not started loading yet)
+ *    |
+ *    |
+ *   \/
+ * Loading (started loading)
+ *     /       \
+ *    |        |
+ *   \/       \/
+ * Content | Error
+ */
 sealed class Lce<T> {
     class Initial<T> : Lce<T>()
 
@@ -10,9 +21,6 @@ sealed class Lce<T> {
     data class Error<T>(val throwable: Throwable) : Lce<T>()
 
     companion object {
-        private val initial = Initial<Any>()
-        private val loadingLoading = Loading<Any>()
-
         fun <T> initial(): Initial<T> {
             return Initial()
         }
