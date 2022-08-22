@@ -9,36 +9,34 @@ import com.mapbox.android.core.location.LocationEngineRequest
 import com.mapbox.android.core.location.LocationEngineResult
 import dagger.Lazy
 import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.subjects.BehaviorSubject
 import javax.inject.Inject
 
 class LocationRepository @Inject constructor(
     private val locationEngineLazy: Lazy<LocationEngine>,
 ) {
 
-    private val locations: BehaviorSubject<Location> = BehaviorSubject.create()
-
-    private val locationCallback = object : LocationEngineCallback<LocationEngineResult?> {
-        override fun onSuccess(result: LocationEngineResult?) {
-            result?.lastLocation?.let {
-                locations.onNext(it)
-            }
-        }
-
-        override fun onFailure(exception: Exception) {
-            locations.onError(exception)
-        }
-    }
-
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION])
     fun locations(): Observable<Location> {
-        // TODO: Observable.create()
-        val request = LocationEngineRequest.Builder(1000L)
-            .setMaxWaitTime(3000L)
-            .build()
-        locationEngineLazy.get().requestLocationUpdates(request, locationCallback, null)
-        return locations
-    }
+        return Observable.create { emitter ->
+            val request = LocationEngineRequest.Builder(500L)
+                .setMaxWaitTime(2000L)
+                .build()
+            val locationCallback = object : LocationEngineCallback<LocationEngineResult?> {
+                override fun onSuccess(result: LocationEngineResult?) {
+                    result?.lastLocation?.let {
+                        emitter.onNext(it)
+                    }
+                }
 
-    // TODO: locationEngine?.removeLocationUpdates(locationCallback)
+                override fun onFailure(exception: Exception) {
+                    emitter.onError(exception)
+                }
+            }
+            val locationEngine = locationEngineLazy.get()
+            locationEngine.requestLocationUpdates(request, locationCallback, null)
+            emitter.setCancellable {
+                locationEngine.removeLocationUpdates(locationCallback)
+            }
+        }
+    }
 }
