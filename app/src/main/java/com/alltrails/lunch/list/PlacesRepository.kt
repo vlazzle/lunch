@@ -30,8 +30,5 @@ class PlacesRepository @Inject constructor(
                     throw it
                 }
             }
-        // TODO: caching/multicasting
-        //  .replay()
-        //  .autoConnect()
     }
 }

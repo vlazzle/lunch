@@ -28,14 +28,19 @@ class PlacesViewModel @Inject constructor(
             .concatWith(locationRepository.location())
 
     // TODO: define new Place model instead of reusing the one from the response
-    fun nearbySearch(): Observable<Lce<List<NearbySearchResponse.Place>>> {
-        return location.map { LatLng.fromLocation(it) }
+    private val nearbySearchCache: Observable<Lce<List<NearbySearchResponse.Place>>> by lazy {
+        location.map { LatLng.fromLocation(it) }
+            // TODO: allow for some gps slop in distinctness check
             .distinctUntilChanged()
             .flatMap {
                 placesRepo.nearbySearch(it)
                     .startWithItem(Lce.loading())
             }
+            .replay(1)
+            .autoConnect()
     }
+
+    fun nearbySearch() = nearbySearchCache
 
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION])
     fun onLocationPermissionGranted() {
