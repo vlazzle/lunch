@@ -2,18 +2,23 @@ package com.alltrails.lunch.app
 
 import android.Manifest
 import android.location.Location
+import android.os.HandlerThread
+import android.os.Looper
 import androidx.annotation.RequiresPermission
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineCallback
 import com.mapbox.android.core.location.LocationEngineRequest
 import com.mapbox.android.core.location.LocationEngineResult
-import dagger.Lazy
 import io.reactivex.rxjava3.core.Observable
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class LocationRepository @Inject constructor(
-    private val locationEngineLazy: Lazy<LocationEngine>,
+    private val locationEngine: LocationEngine,
 ) {
+
+    private var handlerThread: HandlerThread = startHandlerThread()
 
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION])
     fun location(): Observable<Location> {
@@ -32,11 +37,17 @@ class LocationRepository @Inject constructor(
                     emitter.onError(exception)
                 }
             }
-            val locationEngine = locationEngineLazy.get()
-            locationEngine.requestLocationUpdates(request, locationCallback, null)
+
+            locationEngine.requestLocationUpdates(request, locationCallback, getLooper())
             emitter.setCancellable {
                 locationEngine.removeLocationUpdates(locationCallback)
             }
         }
     }
+
+    private fun getLooper(): Looper {
+        return handlerThread.looper ?: startHandlerThread().looper!!
+    }
+
+    private fun startHandlerThread() = HandlerThread("LocationEngineCallback Looper").apply { start() }
 }
