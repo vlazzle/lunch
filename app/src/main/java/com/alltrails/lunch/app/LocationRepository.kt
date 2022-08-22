@@ -16,7 +16,7 @@ class LocationRepository @Inject constructor(
 ) {
 
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION])
-    fun locations(): Observable<Location> {
+    fun location(): Observable<Location> {
         return Observable.create { emitter ->
             val request = LocationEngineRequest.Builder(500L)
                 .setMaxWaitTime(2000L)

@@ -20,10 +20,10 @@ class PlacesViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val hasLocationPermission: BehaviorSubject<Boolean> = BehaviorSubject.createDefault(false)
-    private val locations: Observable<Location> = hasLocationPermission.flatMap {
+    private val location: Observable<Location> = hasLocationPermission.flatMap {
         if (it) {
             //noinspection MissingPermission
-            locationRepository.locations()
+            locationRepository.location()
         } else {
             Observable.empty()
         }
@@ -31,7 +31,7 @@ class PlacesViewModel @Inject constructor(
 
     // TODO: define new Place model instead of reusing the one from the response
     fun nearbySearch(): Observable<Lce<List<NearbySearchResponse.Place>>> {
-        return locations.map { LatLng.fromLocation(it) }
+        return location.map { LatLng.fromLocation(it) }
             .distinctUntilChanged()
             .flatMap { placesRepo.nearbySearch(it) }
             .startWithItem(Lce.loading())
