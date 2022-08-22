@@ -37,15 +37,10 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colors.background
                 ) {
                     when (val places = placesLce.value) {
-                        is Lce.Initial -> {
-                        }
-                        is Lce.Loading -> {
-                            Text(text = stringResource(R.string.loading))
-                        }
+                        is Lce.Initial -> Text(text = stringResource(R.string.awaiting_location))
+                        is Lce.Loading -> Text(text = stringResource(R.string.loading))
                         is Lce.Content -> PlacesList(places = places.content)
-                        is Lce.Error -> {
-                            Text(text = "error: ${places.throwable.message}")
-                        }
+                        is Lce.Error -> Text(text = "error: ${places.throwable.message}")
                     }
                 }
             }

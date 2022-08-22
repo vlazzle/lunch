@@ -9,4 +9,5 @@
     <string name="maps_api_key" translatable="false">AIzaSyCqWHKkgLxJiSwS63bxfWpQ-XhSQs65H5c</string>
 
     <string name="loading">loading…</string>
+    <string name="awaiting_location">awaiting location…</string>
 </resources>

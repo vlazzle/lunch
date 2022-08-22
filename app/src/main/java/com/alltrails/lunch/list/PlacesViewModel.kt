@@ -16,25 +16,25 @@ import javax.inject.Inject
 @HiltViewModel
 class PlacesViewModel @Inject constructor(
     private val placesRepo: PlacesRepository,
-    private val locationRepository: LocationRepository,
+    locationRepository: LocationRepository,
 ) : ViewModel() {
 
     private val hasLocationPermission: BehaviorSubject<Boolean> = BehaviorSubject.createDefault(false)
-    private val location: Observable<Location> = hasLocationPermission.flatMap {
-        if (it) {
+
+    // Subscribe to location() and pass emissions downstream only after hasLocationPermission emits true
+    private val location: Observable<Location> = hasLocationPermission.takeUntil { it }
+            .flatMap { Observable.empty<Location>() }
             //noinspection MissingPermission
-            locationRepository.location()
-        } else {
-            Observable.empty()
-        }
-    }
+            .concatWith(locationRepository.location())
 
     // TODO: define new Place model instead of reusing the one from the response
     fun nearbySearch(): Observable<Lce<List<NearbySearchResponse.Place>>> {
         return location.map { LatLng.fromLocation(it) }
             .distinctUntilChanged()
-            .flatMap { placesRepo.nearbySearch(it) }
-            .startWithItem(Lce.loading())
+            .flatMap {
+                placesRepo.nearbySearch(it)
+                    .startWithItem(Lce.loading())
+            }
     }
 
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION])
