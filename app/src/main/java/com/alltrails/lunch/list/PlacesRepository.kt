@@ -5,6 +5,7 @@ import com.alltrails.lunch.backend.PlacesService
 import com.alltrails.lunch.core.LatLng
 import com.alltrails.lunch.core.Lce
 import io.reactivex.rxjava3.core.Observable
+import java.io.IOException
 import javax.inject.Inject
 
 class PlacesRepository @Inject constructor(
@@ -22,9 +23,15 @@ class PlacesRepository @Inject constructor(
                     Lce.Error(Throwable("${response.status}: ${response.error_message}"))
                 }
             }
+            .onErrorReturn {
+                if (it is IOException) {
+                    Lce.Error(it)
+                } else {
+                    throw it
+                }
+            }
         // TODO: caching/multicasting
         //  .replay()
         //  .autoConnect()
-        // TODO: handle network errors
     }
 }
