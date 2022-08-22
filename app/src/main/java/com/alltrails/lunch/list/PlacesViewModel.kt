@@ -10,6 +10,7 @@ import com.alltrails.lunch.core.LatLng
 import com.alltrails.lunch.core.Lce
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.subjects.BehaviorSubject
 import javax.inject.Inject
 
@@ -20,6 +21,7 @@ class PlacesViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val hasLocationPermission: BehaviorSubject<Boolean> = BehaviorSubject.createDefault(false)
+    private val disposables = CompositeDisposable()
 
     // Subscribe to location() and pass emissions downstream only after hasLocationPermission emits true
     private val location: Observable<Location> = hasLocationPermission.takeUntil { it }
@@ -37,7 +39,7 @@ class PlacesViewModel @Inject constructor(
                     .startWithItem(Lce.loading())
             }
             .replay(1)
-            .autoConnect()
+            .apply { disposables.add(connect()) }
     }
 
     fun nearbySearch() = nearbySearchCache
@@ -45,5 +47,10 @@ class PlacesViewModel @Inject constructor(
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION])
     fun onLocationPermissionGranted() {
         hasLocationPermission.onNext(true)
+    }
+
+    override fun onCleared() {
+        disposables.dispose()
+        super.onCleared()
     }
 }
