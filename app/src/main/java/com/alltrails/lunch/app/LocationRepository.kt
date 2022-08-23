@@ -18,31 +18,11 @@ class LocationRepository @Inject constructor(
     private val locationEngine: LocationEngine,
 ) {
 
-    private var handlerThread: HandlerThread = startHandlerThread()
+    private var handlerThread: HandlerThread? = null
 
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION])
     fun location(): Observable<Location> {
-        // Ideally we wouldn't need fastCurrentLocation, we'd use futureLocationUpdates for everything including the
-        //  initial location. Unfortunately however, requestLocationUpdates is slower than getLastLocation to invoke
-        //  LocationEngineCallback.
-        val fastCurrentLocation: Observable<Location> = Observable.create { emitter ->
-            val locationCallback = object : LocationEngineCallback<LocationEngineResult?> {
-                override fun onSuccess(result: LocationEngineResult?) {
-                    result?.lastLocation?.let {
-                        emitter.onNext(it)
-                    }
-                    emitter.onComplete()
-                }
-
-                override fun onFailure(exception: Exception) {
-                    emitter.onError(exception)
-                }
-            }
-
-            locationEngine.getLastLocation(locationCallback)
-        }
-
-        val futureLocationUpdates: Observable<Location> = Observable.create { emitter ->
+        return Observable.create { emitter ->
             val request = LocationEngineRequest.Builder(500L)
                 .setMaxWaitTime(2000L)
                 .build()
@@ -58,18 +38,19 @@ class LocationRepository @Inject constructor(
                 }
             }
 
+            locationEngine.getLastLocation(locationCallback)
             locationEngine.requestLocationUpdates(request, locationCallback, getLooper())
+
             emitter.setCancellable {
                 locationEngine.removeLocationUpdates(locationCallback)
             }
         }
-
-        return Observable.merge(fastCurrentLocation, futureLocationUpdates)
     }
 
     private fun getLooper(): Looper {
-        return handlerThread.looper ?: startHandlerThread().looper!!
+        if (handlerThread?.looper == null) {
+            handlerThread = HandlerThread("LocationEngineCallback Looper").apply { start() }
+        }
+        return handlerThread!!.looper!!
     }
-
-    private fun startHandlerThread() = HandlerThread("LocationEngineCallback Looper").apply { start() }
 }
