@@ -1,6 +1,6 @@
 package com.alltrails.lunch.backend
 
-class NearbySearchResponse(
+data class NearbySearchResponse(
     val html_attributions: List<String>,
     val results: List<Place>,
     val status: PlacesSearchStatus,
@@ -19,12 +19,12 @@ class NearbySearchResponse(
     }
 
     // https://developers.google.com/maps/documentation/places/web-service/search-nearby#Place
-    class Place(
+    data class Place(
         val name: String?,
         val geometry: Geometry? = null,
         val place_id: String? = null,
     ) {
-        class Geometry (
+        data class Geometry (
             val location: Location
         ){
             class Location(val lat: Double, val lng: Double)
