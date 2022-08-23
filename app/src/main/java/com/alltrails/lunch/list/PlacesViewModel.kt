@@ -42,7 +42,12 @@ class PlacesViewModel @Inject constructor(
             .apply { disposables.add(connect()) }
     }
 
-    fun nearbySearch() = nearbySearchCache
+    /**
+     * Lce.Initial: State before receiving first location update.
+     * Lce.Loading: State after receiving first location update but before nearbySearch response.
+     * Lce.Content: State after nearbySearch response.
+     */
+    fun nearbySearch(): Observable<Lce<List<NearbySearchResponse.Place>>> = nearbySearchCache
 
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION])
     fun onLocationPermissionGranted() {
@@ -53,6 +58,10 @@ class PlacesViewModel @Inject constructor(
         hasLocationPermission.onNext(false)
     }
 
+    /**
+     * Emits true immediately upon subscription iff location permission was previously denied.
+     * Then emits true whenever location permission is denied subsequently. Never emits false.
+     */
     fun locationPermissionDenied(): Observable<Boolean> {
         return hasLocationPermission.filter(Boolean::not)
             .map { true }
