@@ -71,7 +71,7 @@ class MainActivity : ComponentActivity() {
                     when (val places = placesLce.value) {
                         is Lce.Initial -> {
                             val locationPermissionDenied =
-                                placesViewModel.locationPermissionDenied().subscribeAsState(false)
+                                placesViewModel.locationPermissionDenied().map { true }.subscribeAsState(false)
                             PlacesInitial(locationPermissionDenied = locationPermissionDenied.value)
                         }
                         is Lce.Loading -> Text(text = stringResource(R.string.loading))

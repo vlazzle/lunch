@@ -59,12 +59,12 @@ class PlacesViewModel @Inject constructor(
     }
 
     /**
-     * Emits true immediately upon subscription iff location permission was previously denied.
-     * Then emits true whenever location permission is denied subsequently. Never emits false.
+     * Emits Unit immediately upon subscription iff location permission was previously denied.
+     * Then emits Unit whenever location permission is denied subsequently.
      */
-    fun locationPermissionDenied(): Observable<Boolean> {
+    fun locationPermissionDenied(): Observable<Unit> {
         return hasLocationPermission.filter(Boolean::not)
-            .map { true }
+            .map { }
     }
 
     override fun onCleared() {
