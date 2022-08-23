@@ -7,6 +7,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -102,8 +104,11 @@ fun PlacesInitial(locationPermissionDenied: Boolean) {
 
 @Composable
 fun PlacesContent(places: List<NearbySearchResponse.Place>) {
-    // TODO: LazyColumn
-    Text(text = places.take(20).map { it.name }.joinToString("\n"))
+    LazyColumn {
+        items(places) { place ->
+            Text(text = place.name ?: stringResource(R.string.unnamed_place))
+        }
+    }
 }
 
 @Preview(showBackground = true)
