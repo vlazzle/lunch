@@ -72,16 +72,10 @@ class MainActivity : ComponentActivity() {
                         is Lce.Initial -> {
                             val locationPermissionDenied =
                                 placesViewModel.locationPermissionDenied().subscribeAsState(false)
-                            if (!locationPermissionDenied.value) {
-                                Text(text = stringResource(R.string.awaiting_location))
-                            } else {
-                                // TODO: snackbar instead, with action button to open app settings
-                                //  https://foso.github.io/Jetpack-Compose-Playground/material/snackbar/
-                                Text(text = stringResource(R.string.location_permission_denied))
-                            }
+                            PlacesInitial(locationPermissionDenied = locationPermissionDenied.value)
                         }
                         is Lce.Loading -> Text(text = stringResource(R.string.loading))
-                        is Lce.Content -> PlacesList(places = places.content)
+                        is Lce.Content -> PlacesContent(places = places.content)
                         is Lce.Error -> Text(text = "error: ${places.throwable.message}")
                     }
                 }
@@ -96,7 +90,19 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun PlacesList(places: List<NearbySearchResponse.Place>) {
+fun PlacesInitial(locationPermissionDenied: Boolean) {
+    if (!locationPermissionDenied) {
+        Text(text = stringResource(R.string.awaiting_location))
+    } else {
+        // TODO: snackbar instead, with action button to open app settings
+        //  https://foso.github.io/Jetpack-Compose-Playground/material/snackbar/
+        Text(text = stringResource(R.string.location_permission_denied))
+    }
+}
+
+@Composable
+fun PlacesContent(places: List<NearbySearchResponse.Place>) {
+    // TODO: LazyColumn
     Text(text = places.take(20).map { it.name }.joinToString("\n"))
 }
 
@@ -104,6 +110,11 @@ fun PlacesList(places: List<NearbySearchResponse.Place>) {
 @Composable
 fun DefaultPreview() {
     LunchTheme {
-        PlacesList(listOf(NearbySearchResponse.Place("taco bell")))
+        PlacesContent(listOf(
+            NearbySearchResponse.Place("taco bell"),
+            NearbySearchResponse.Place("in n out"),
+            NearbySearchResponse.Place("chipotle"),
+            NearbySearchResponse.Place("popeyes"),
+        ))
     }
 }
