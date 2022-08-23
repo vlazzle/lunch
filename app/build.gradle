@@ -84,9 +84,5 @@ dependencies {
     // https://docs.mapbox.com/android/maps/guides/install/
     implementation 'com.mapbox.maps:android:10.7.0'
 
-    // https://github.com/permissions-dispatcher/PermissionsDispatcher
-    implementation "com.github.permissions-dispatcher:permissionsdispatcher:4.9.2"
-    kapt "com.github.permissions-dispatcher:permissionsdispatcher-processor:4.9.2"
-
     implementation 'com.google.android.gms:play-services-location:20.0.0'
 }

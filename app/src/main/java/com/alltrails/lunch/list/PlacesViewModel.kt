@@ -20,7 +20,7 @@ class PlacesViewModel @Inject constructor(
     locationRepository: LocationRepository,
 ) : ViewModel() {
 
-    private val hasLocationPermission: BehaviorSubject<Boolean> = BehaviorSubject.createDefault(false)
+    private val hasLocationPermission: BehaviorSubject<Boolean> = BehaviorSubject.create()
     private val disposables = CompositeDisposable()
 
     // Subscribe to location() and pass emissions downstream only after hasLocationPermission emits true
@@ -47,6 +47,15 @@ class PlacesViewModel @Inject constructor(
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION])
     fun onLocationPermissionGranted() {
         hasLocationPermission.onNext(true)
+    }
+
+    fun onLocationPermissionDenied() {
+        hasLocationPermission.onNext(false)
+    }
+
+    fun locationPermissionDenied(): Observable<Boolean> {
+        return hasLocationPermission.filter(Boolean::not)
+            .map { true }
     }
 
     override fun onCleared() {
