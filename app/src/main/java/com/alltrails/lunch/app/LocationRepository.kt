@@ -24,7 +24,7 @@ class LocationRepository @Inject constructor(
     fun location(): Observable<Location> {
         return Observable.create { emitter ->
             val request = LocationEngineRequest.Builder(500L)
-                .setMaxWaitTime(2000L)
+                .setMaxWaitTime(1000L)
                 .build()
             val locationCallback = object : LocationEngineCallback<LocationEngineResult?> {
                 override fun onSuccess(result: LocationEngineResult?) {
