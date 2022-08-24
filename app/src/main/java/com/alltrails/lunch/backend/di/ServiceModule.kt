@@ -34,6 +34,7 @@ object ServiceModule {
                 val originalRequest = chain.request()
                 val url = originalRequest.url.newBuilder()
                     .addQueryParameter("key", context.getString(R.string.maps_api_key))
+                    .addQueryParameter("keyword", "restaurant")
                     // Set rankby=distance because https://github.com/googlemaps/openapi-specification/pull/364
                     .addQueryParameter("rankby", "distance")
                     .build()
