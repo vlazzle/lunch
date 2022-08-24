@@ -23,6 +23,9 @@ data class NearbySearchResponse(
         val name: String?,
         val geometry: Geometry? = null,
         val place_id: String? = null,
+        val rating: Float? = null,
+        val user_ratings_total: Int? = null,
+        val price_level: Int? = null,
     ) {
         data class Geometry (
             val location: Location
