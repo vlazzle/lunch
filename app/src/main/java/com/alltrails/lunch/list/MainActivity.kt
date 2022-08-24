@@ -69,17 +69,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    val placesLce = placesViewModel.nearbySearch().subscribeAsState(Lce.initial())
-                    when (val places = placesLce.value) {
-                        is Lce.Initial -> {
-                            val locationPermissionDenied =
-                                placesViewModel.locationPermissionDenied().map { true }.subscribeAsState(false)
-                            PlacesInitial(locationPermissionDenied = locationPermissionDenied.value)
-                        }
-                        is Lce.Loading -> Text(text = stringResource(R.string.loading))
-                        is Lce.Content -> PlacesContent(places = places.content)
-                        is Lce.Error -> Text(text = "error: ${places.throwable.message}")
-                    }
+                    NearbyPlaces(placesViewModel = placesViewModel)
                 }
             }
         }
@@ -92,7 +82,22 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun PlacesInitial(locationPermissionDenied: Boolean) {
+private fun NearbyPlaces(placesViewModel: PlacesViewModel) {
+    when (val places: Lce<List<NearbySearchResponse.Place>> =
+        placesViewModel.nearbySearch().subscribeAsState(Lce.initial()).value) {
+        is Lce.Initial -> {
+            val locationPermissionDenied =
+                placesViewModel.locationPermissionDenied().map { true }.subscribeAsState(false)
+            PlacesInitial(locationPermissionDenied = locationPermissionDenied.value)
+        }
+        is Lce.Loading -> Text(text = stringResource(R.string.loading))
+        is Lce.Content -> PlacesContent(places = places.content)
+        is Lce.Error -> Text(text = "error: ${places.throwable.message}")
+    }
+}
+
+@Composable
+private fun PlacesInitial(locationPermissionDenied: Boolean) {
     if (!locationPermissionDenied) {
         Text(text = stringResource(R.string.awaiting_location))
     } else {
@@ -103,7 +108,7 @@ fun PlacesInitial(locationPermissionDenied: Boolean) {
 }
 
 @Composable
-fun PlacesContent(places: List<NearbySearchResponse.Place>) {
+private fun PlacesContent(places: List<NearbySearchResponse.Place>) {
     LazyColumn {
         items(places) { place ->
             Text(text = place.name ?: stringResource(R.string.unnamed_place))
@@ -113,7 +118,7 @@ fun PlacesContent(places: List<NearbySearchResponse.Place>) {
 
 @Preview(showBackground = true)
 @Composable
-fun DefaultPreview() {
+private fun DefaultPreview() {
     LunchTheme {
         PlacesContent(listOf(
             NearbySearchResponse.Place("taco bell"),
