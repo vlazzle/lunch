@@ -13,4 +13,5 @@
     <string name="location_permission_denied">To show nearby places, please grant me location permission.</string>
     <string name="unnamed_place">unnamed place</string>
     <string name="no_ratings_yet">no ratings yet</string>
+    <string name="place_photo_content_description">photo of %s</string>
 </resources>

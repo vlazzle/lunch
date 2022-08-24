@@ -3,6 +3,7 @@ package com.alltrails.lunch.list
 import android.Manifest.permission
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.TypedValue
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,18 +21,25 @@ import androidx.compose.runtime.rxjava3.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.ColorPainter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import coil.compose.AsyncImage
 import com.alltrails.lunch.R
 import com.alltrails.lunch.backend.NearbySearchResponse
 import com.alltrails.lunch.core.Lce
 import com.alltrails.lunch.ui.theme.DarkYellow
 import com.alltrails.lunch.ui.theme.LightGray
 import com.alltrails.lunch.ui.theme.LunchTheme
+import com.alltrails.lunch.ui.theme.Typography
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
 
@@ -118,26 +126,63 @@ private fun PlacesInitial(locationPermissionDenied: Boolean) {
 }
 
 @Composable
-private fun PlacesContent(places: List<NearbySearchResponse.Place>) {
+private fun PlacesContent(places: List<NearbySearchResponse.Place> ) {
+    val itemHeight = 77.dp
+    val photoSizePx = TypedValue
+        .applyDimension(TypedValue.COMPLEX_UNIT_DIP, itemHeight.value, LocalContext.current.resources.displayMetrics)
+        .toInt()
+    val key = stringResource(R.string.maps_api_key)
+
     LazyColumn(
         contentPadding = PaddingValues(vertical = 15.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.padding(horizontal = 17.dp)
     ) {
         items(places) { place ->
+            val roundedCornerShape = RoundedCornerShape(7.dp)
             Box(
                 modifier = Modifier
-                    .background(color = Color.White, shape = RoundedCornerShape(5.dp))
-                    .border(width = 1.dp, color = LightGray, shape = RoundedCornerShape(5.dp))
-                    .padding(vertical = 8.dp, horizontal = 10.dp)
+                    .background(color = Color.White, shape = roundedCornerShape)
+                    .border(width = 1.dp, color = LightGray, shape = roundedCornerShape)
+                    .padding(vertical = 18.dp, horizontal = 16.dp)
+                    .height(itemHeight)
                     .fillMaxWidth()
             ) {
                 Row {
-                    // TODO: photo
+                    val placeName = place.name ?: stringResource(R.string.unnamed_place)
+                    val photo = place.photos?.firstOrNull()
+                    if (photo != null) {
+                        val sizeParam = if (photo.width > photo.height) {
+                            "maxwidth"
+                        } else {
+                            "maxheight"
+                        }
+                        val url = "https://maps.googleapis.com/maps/api/place/photo?key=$key" +
+                                "&$sizeParam=$photoSizePx" +
+                                "&photo_reference=${photo.photo_reference}"
+                        // TODO: investigate loading photo into a pre-measured placeholder using AsyncImagePainter
+                        //  https://coil-kt.github.io/coil/compose/#asyncimagepainter
+                        AsyncImage(
+                            model = url,
+                            contentDescription = stringResource(R.string.place_photo_content_description, placeName),
+                            contentScale = ContentScale.Crop,
+                            alignment = Alignment.Center,
+                            error = ColorPainter(LightGray),
+                            placeholder = ColorPainter(LightGray),
+                            modifier = Modifier
+                                .width(itemHeight)
+                                .height(itemHeight)
+                        )
+                        Spacer(modifier = Modifier.width(14.dp))
+                    }
+
                     Column {
                         Text(
-                            text = place.name ?: stringResource(R.string.unnamed_place),
-                            fontWeight = FontWeight.Bold
+                            text = placeName,
+                            style = Typography.body1 + TextStyle(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
+                            )
                         )
                         StarRating(
                             rating = place.rating,
@@ -163,16 +208,25 @@ private fun PlacesContent(places: List<NearbySearchResponse.Place>) {
 
 @Composable
 private fun StarRating(rating: Float?, userRatingsTotal: Int?) {
-    Row {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         if (rating != null && (userRatingsTotal ?: 0) > 0) {
             // TODO: half stars
-            Text(text = "\u2605".repeat(rating.toInt()),
-                color = DarkYellow)
+            Text(
+                text = "\u2605".repeat(rating.toInt()),
+                style = TextStyle(
+                    color = DarkYellow,
+                    fontSize = 22.sp
+                )
+            )
             Text(text = "\u2605".repeat(5 - rating.toInt()),
-                color = LightGray)
+                style = TextStyle(
+                    color = LightGray,
+                    fontSize = 22.sp
+                ))
 
             if (userRatingsTotal != null) {
                 Text(text = "($userRatingsTotal)",
+                    fontSize = 14.sp,
                     modifier = Modifier.padding(start = 5.dp))
             }
         } else {

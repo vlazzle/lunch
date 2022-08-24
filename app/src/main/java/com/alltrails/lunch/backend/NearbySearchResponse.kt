@@ -26,11 +26,19 @@ data class NearbySearchResponse(
         val rating: Float? = null,
         val user_ratings_total: Int? = null,
         val price_level: Int? = null,
+        val photos: List<PlacePhoto>? = null
     ) {
         data class Geometry (
             val location: Location
         ){
             class Location(val lat: Double, val lng: Double)
         }
+
+        data class PlacePhoto(
+            val photo_reference: String,
+            val height: Int,
+            val width: Int,
+            val html_attributions: List<String>,
+        )
     }
 }
