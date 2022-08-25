@@ -24,16 +24,16 @@ class PlacesViewModel @Inject constructor(
     private val disposables = CompositeDisposable()
 
     // Subscribe to location() and pass emissions downstream only after hasLocationPermission emits true
-    private val location: Observable<Location> = hasLocationPermission.takeUntil { it }
+    val location: Observable<LatLng> = hasLocationPermission.takeUntil { it }
             .flatMap { Observable.empty<Location>() }
             //noinspection MissingPermission
             .concatWith(locationRepository.location())
+            .map(LatLng::fromLocation)
 
     // TODO: define new Place model instead of reusing the one from the response
     private val nearbySearchCache: Observable<Lce<List<NearbySearchResponse.Place>>> by lazy {
-        location.map { LatLng.fromLocation(it) }
+        location.distinctUntilChanged()
             // TODO: allow for some gps slop in distinctness check
-            .distinctUntilChanged()
             .flatMap {
                 placesRepo.nearbySearch(it)
                     .startWithItem(Lce.loading())

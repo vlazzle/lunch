@@ -39,6 +39,7 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.alltrails.lunch.R
 import com.alltrails.lunch.backend.NearbySearchResponse
+import com.alltrails.lunch.core.LatLng
 import com.alltrails.lunch.core.Lce
 import com.alltrails.lunch.ui.theme.DarkYellow
 import com.alltrails.lunch.ui.theme.LightGray
@@ -113,7 +114,10 @@ private fun NearbyPlaces(placesViewModel: PlacesViewModel) {
             PlacesInitial(locationPermissionDenied = locationPermissionDenied.value)
         }
         is Lce.Loading -> Text(text = stringResource(R.string.loading))
-        is Lce.Content -> PlacesNavHost(places = places.content)
+        is Lce.Content -> {
+            val location = placesViewModel.location.subscribeAsState(initial = LatLng.nullIsland)
+            PlacesNavHost(places = places.content, location = location.value)
+        }
         is Lce.Error -> Text(text = "error: ${places.throwable.message}")
     }
 }
@@ -139,7 +143,8 @@ private enum class Routes {
 private fun PlacesNavHost(
     places: List<NearbySearchResponse.Place>,
     navController: NavHostController = rememberNavController(),
-    startDestination: String = Routes.PlacesMap.name
+    startDestination: String = Routes.PlacesMap.name,
+    location: LatLng,
 ) {
     NavHost(
         navController = navController,
@@ -149,7 +154,7 @@ private fun PlacesNavHost(
             PlacesList(places)
         }
         composable(Routes.PlacesMap.name) {
-            PlacesMap {
+            PlacesMap(location = location) {
                 navController.navigate(Routes.PlacesList.name)
             }
         }
@@ -160,12 +165,12 @@ private fun PlacesNavHost(
 }
 
 @Composable
-private fun PlacesMap(onNavigateToPlacesList: () -> Unit) {
+private fun PlacesMap(location: LatLng, onNavigateToPlacesList: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text("places map")
+        Text(location.toString())
         Button(onClick = onNavigateToPlacesList) {
             Text("places list")
         }
