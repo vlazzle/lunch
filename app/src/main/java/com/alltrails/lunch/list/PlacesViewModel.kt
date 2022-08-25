@@ -5,9 +5,9 @@ import android.location.Location
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.ViewModel
 import com.alltrails.lunch.app.LocationRepository
-import com.alltrails.lunch.backend.NearbySearchResponse
 import com.alltrails.lunch.core.LatLng
 import com.alltrails.lunch.core.Lce
+import com.alltrails.lunch.core.NearbyPlaces
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
@@ -24,19 +24,34 @@ class PlacesViewModel @Inject constructor(
     private val disposables = CompositeDisposable()
 
     // Subscribe to location() and pass emissions downstream only after hasLocationPermission emits true
-    val location: Observable<LatLng> = hasLocationPermission.takeUntil { it }
+    private val location: Observable<LatLng> = hasLocationPermission.takeUntil { it }
             .flatMap { Observable.empty<Location>() }
             //noinspection MissingPermission
             .concatWith(locationRepository.location())
             .map(LatLng::fromLocation)
 
     // TODO: define new Place model instead of reusing the one from the response
-    private val nearbySearchCache: Observable<Lce<List<NearbySearchResponse.Place>>> by lazy {
+    private val nearbySearchCache: Observable<Lce<NearbyPlaces>> by lazy {
         location.distinctUntilChanged()
             // TODO: allow for some gps slop in distinctness check
-            .flatMap {
-                placesRepo.nearbySearch(it)
+            .flatMap { latLng ->
+                placesRepo.nearbySearch(latLng)
                     .startWithItem(Lce.loading())
+                    .map { lce ->
+                        when (lce) {
+                            is Lce.Initial -> Lce.initial()
+                            is Lce.Loading -> Lce.loading()
+                            is Lce.Content -> Lce.Content(NearbyPlaces(lce.content, latLng))
+                            is Lce.Error -> Lce.Error(lce.throwable)
+                        }
+                    }
+            }
+            .scan { prev, current ->
+                if (current is Lce.Loading && prev is Lce.Content) {
+                    Lce.Loading(oldContent = prev.content)
+                } else {
+                    current
+                }
             }
             .replay(1)
             .apply { disposables.add(connect()) }
@@ -47,7 +62,7 @@ class PlacesViewModel @Inject constructor(
      * Lce.Loading: State after receiving first location update but before nearbySearch response.
      * Lce.Content: State after nearbySearch response.
      */
-    fun nearbySearch(): Observable<Lce<List<NearbySearchResponse.Place>>> = nearbySearchCache
+    fun nearbySearch(): Observable<Lce<NearbyPlaces>> = nearbySearchCache
 
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION])
     fun onLocationPermissionGranted() {

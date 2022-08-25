@@ -14,7 +14,7 @@ package com.alltrails.lunch.core
 sealed class Lce<T> {
     class Initial<T> : Lce<T>()
 
-    class Loading<T> : Lce<T>()
+    class Loading<T>(val oldContent: T? = null) : Lce<T>()
 
     data class Content<T>(val content: T) : Lce<T>()
 

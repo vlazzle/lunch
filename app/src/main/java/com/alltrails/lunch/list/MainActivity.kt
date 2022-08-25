@@ -12,10 +12,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rxjava3.subscribeAsState
 import androidx.compose.ui.Alignment
@@ -30,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavHostController
@@ -42,6 +40,7 @@ import com.alltrails.lunch.R
 import com.alltrails.lunch.backend.NearbySearchResponse
 import com.alltrails.lunch.core.LatLng
 import com.alltrails.lunch.core.Lce
+import com.alltrails.lunch.core.NearbyPlaces
 import com.alltrails.lunch.ui.theme.DarkYellow
 import com.alltrails.lunch.ui.theme.LightGray
 import com.alltrails.lunch.ui.theme.LunchTheme
@@ -108,19 +107,38 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun NearbyPlaces(placesViewModel: PlacesViewModel) {
-    when (val places: Lce<List<NearbySearchResponse.Place>> =
-        placesViewModel.nearbySearch().subscribeAsState(Lce.initial()).value) {
-        is Lce.Initial -> {
-            val locationPermissionDenied =
-                placesViewModel.locationPermissionDenied().map { true }.subscribeAsState(false)
-            PlacesInitial(locationPermissionDenied = locationPermissionDenied.value)
+    Box {
+        val navController = rememberNavController()
+        val lce: Lce<NearbyPlaces> = placesViewModel.nearbySearch().subscribeAsState(Lce.initial()).value
+        val places: NearbyPlaces?
+        when (lce) {
+            is Lce.Initial -> {
+                val locationPermissionDenied =
+                    placesViewModel.locationPermissionDenied().map { true }.subscribeAsState(false)
+                PlacesInitial(locationPermissionDenied = locationPermissionDenied.value)
+                places = null
+            }
+            is Lce.Loading -> {
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .zIndex(1f)
+                        .padding(8.dp)
+                        .align(Alignment.BottomCenter)
+                )
+                places = lce.oldContent
+            }
+            is Lce.Content -> {
+                places = lce.content
+            }
+            is Lce.Error -> {
+                Text(text = "error: ${lce.throwable.message}")
+                places = null
+            }
         }
-        is Lce.Loading -> Text(text = stringResource(R.string.loading))
-        is Lce.Content -> {
-            val location = placesViewModel.location.subscribeAsState(initial = LatLng.nullIsland)
-            PlacesNavHost(places = places.content, location = location.value)
+
+        places?.let {
+            PlacesNavHost(places = it, navController = navController)
         }
-        is Lce.Error -> Text(text = "error: ${places.throwable.message}")
     }
 }
 
@@ -143,20 +161,19 @@ private enum class Routes {
 
 @Composable
 private fun PlacesNavHost(
-    places: List<NearbySearchResponse.Place>,
-    navController: NavHostController = rememberNavController(),
+    places: NearbyPlaces,
+    navController: NavHostController,
     startDestination: String = Routes.PlacesMap.name,
-    location: LatLng,
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination,
     ) {
         composable(Routes.PlacesList.name) {
-            PlacesList(places)
+            PlacesList(places.places)
         }
         composable(Routes.PlacesMap.name) {
-            PlacesMap(location = location) {
+            PlacesMap(location = places.location) {
                 navController.navigate(Routes.PlacesList.name)
             }
         }
