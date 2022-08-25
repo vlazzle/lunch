@@ -3,7 +3,6 @@ package com.alltrails.lunch.list
 import android.Manifest.permission
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.TypedValue
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -128,9 +127,9 @@ private fun PlacesInitial(locationPermissionDenied: Boolean) {
 @Composable
 private fun PlacesContent(places: List<NearbySearchResponse.Place> ) {
     val itemHeight = 77.dp
-    val photoSizePx = TypedValue
-        .applyDimension(TypedValue.COMPLEX_UNIT_DIP, itemHeight.value, LocalContext.current.resources.displayMetrics)
-        .toInt()
+    val photoSizePx = with(LocalDensity.current) {
+        itemHeight.roundToPx()
+    }
     val key = stringResource(R.string.maps_api_key)
 
     LazyColumn(
