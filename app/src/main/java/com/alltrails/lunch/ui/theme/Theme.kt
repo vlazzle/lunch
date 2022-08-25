@@ -3,12 +3,15 @@ package com.alltrails.lunch.ui.theme
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 
 private val LightColorPalette = lightColors(
-    primary = Purple500,
+    primary = AllTrailsGreen,
+    onPrimary = Color.White,
     primaryVariant = Purple700,
     secondary = Teal200,
     background = LighterGray,
+    onBackground = MediumGray,
 
     /* Other default colors to override
     surface = Color.White,

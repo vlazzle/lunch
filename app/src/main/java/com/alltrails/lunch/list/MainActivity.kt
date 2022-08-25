@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -31,6 +32,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.alltrails.lunch.R
 import com.alltrails.lunch.backend.NearbySearchResponse
@@ -46,7 +51,7 @@ import java.util.*
 class MainActivity : ComponentActivity() {
 
     private val placesViewModel: PlacesViewModel by lazy {
-        ViewModelProvider(this).get(PlacesViewModel::class.java)
+        ViewModelProvider(this)[PlacesViewModel::class.java]
     }
 
     private val requestPermissionLauncher =
@@ -108,7 +113,7 @@ private fun NearbyPlaces(placesViewModel: PlacesViewModel) {
             PlacesInitial(locationPermissionDenied = locationPermissionDenied.value)
         }
         is Lce.Loading -> Text(text = stringResource(R.string.loading))
-        is Lce.Content -> PlacesContent(places = places.content)
+        is Lce.Content -> PlacesNavHost(places = places.content)
         is Lce.Error -> Text(text = "error: ${places.throwable.message}")
     }
 }
@@ -124,8 +129,51 @@ private fun PlacesInitial(locationPermissionDenied: Boolean) {
     }
 }
 
+private enum class Routes {
+    PlacesList,
+    PlacesMap,
+    PlaceDetail,
+}
+
 @Composable
-private fun PlacesContent(places: List<NearbySearchResponse.Place> ) {
+private fun PlacesNavHost(
+    places: List<NearbySearchResponse.Place>,
+    navController: NavHostController = rememberNavController(),
+    startDestination: String = Routes.PlacesMap.name
+) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination,
+    ) {
+        composable(Routes.PlacesList.name) {
+            PlacesList(places)
+        }
+        composable(Routes.PlacesMap.name) {
+            PlacesMap {
+                navController.navigate(Routes.PlacesList.name)
+            }
+        }
+        composable(Routes.PlaceDetail.name) {
+            Text("place detail")
+        }
+    }
+}
+
+@Composable
+private fun PlacesMap(onNavigateToPlacesList: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text("places map")
+        Button(onClick = onNavigateToPlacesList) {
+            Text("places list")
+        }
+    }
+}
+
+@Composable
+private fun PlacesList(places: List<NearbySearchResponse.Place> ) {
     val itemHeight = 77.dp
     val photoSizePx = with(LocalDensity.current) {
         itemHeight.roundToPx()
@@ -255,7 +303,7 @@ private fun Price(priceLevel: Int?, supportingText: String?) {
 @Composable
 private fun DefaultPreview() {
     LunchTheme {
-        PlacesContent(listOf(
+        PlacesList(listOf(
             NearbySearchResponse.Place("taco bell"),
             NearbySearchResponse.Place("in n out"),
             NearbySearchResponse.Place("chipotle"),
