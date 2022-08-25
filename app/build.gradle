@@ -78,13 +78,8 @@ dependencies {
 
     debugImplementation 'com.squareup.okhttp3:logging-interceptor:4.10.0'
 
-    // https://docs.mapbox.com/android/core/guides/
-    implementation 'com.mapbox.mapboxsdk:mapbox-android-core:5.0.2'
-
-    // https://docs.mapbox.com/android/maps/guides/install/
-    implementation 'com.mapbox.maps:android:10.7.0'
-
     implementation 'com.google.android.gms:play-services-location:20.0.0'
+    implementation 'com.google.android.gms:play-services-maps:18.1.0'
 
     implementation 'io.coil-kt:coil-compose:2.1.0'
 

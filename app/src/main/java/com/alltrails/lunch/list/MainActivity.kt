@@ -37,6 +37,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
+import com.alltrails.lunch.BuildConfig
 import com.alltrails.lunch.R
 import com.alltrails.lunch.backend.NearbySearchResponse
 import com.alltrails.lunch.core.LatLng
@@ -79,6 +80,7 @@ class MainActivity : ComponentActivity() {
                 permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
+            //noinspection MissingPermission
             placesViewModel.onLocationPermissionGranted()
         } else {
             requestLocationPermission()
@@ -183,7 +185,6 @@ private fun PlacesList(places: List<NearbySearchResponse.Place> ) {
     val photoSizePx = with(LocalDensity.current) {
         itemHeight.roundToPx()
     }
-    val key = stringResource(R.string.maps_api_key)
 
     LazyColumn(
         contentPadding = PaddingValues(vertical = 15.dp),
@@ -209,7 +210,7 @@ private fun PlacesList(places: List<NearbySearchResponse.Place> ) {
                         } else {
                             "maxheight"
                         }
-                        val url = "https://maps.googleapis.com/maps/api/place/photo?key=$key" +
+                        val url = "https://maps.googleapis.com/maps/api/place/photo?key=${BuildConfig.MAPS_API_KEY}" +
                                 "&$sizeParam=$photoSizePx" +
                                 "&photo_reference=${photo.photo_reference}"
                         // TODO: investigate loading photo into a pre-measured placeholder using AsyncImagePainter
