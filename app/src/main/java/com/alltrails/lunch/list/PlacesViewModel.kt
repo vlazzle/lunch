@@ -21,6 +21,7 @@ class PlacesViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val hasLocationPermission: BehaviorSubject<Boolean> = BehaviorSubject.create()
+    private val nameQuery: BehaviorSubject<String> = BehaviorSubject.createDefault("")
     private val disposables = CompositeDisposable()
 
     // Subscribe to location() and pass emissions downstream only after hasLocationPermission emits true
@@ -62,7 +63,16 @@ class PlacesViewModel @Inject constructor(
      * Lce.Loading: State after receiving first location update but before nearbySearch response.
      * Lce.Content: State after nearbySearch response.
      */
-    fun nearbySearch(): Observable<Lce<NearbyPlaces>> = nearbySearchCache
+    fun nearbySearch(): Observable<Lce<NearbyPlaces>> {
+        return Observable.combineLatest(nearbySearchCache, nameQuery) { lce, query ->
+            if (lce is Lce.Content) {
+                val matchingPlaces = lce.content.places.filter { it.name?.contains(query, ignoreCase = true) ?: false }
+                lce.copy(content = lce.content.copy(places = matchingPlaces))
+            } else {
+                lce
+            }
+        }
+    }
 
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION])
     fun onLocationPermissionGranted() {
@@ -80,6 +90,10 @@ class PlacesViewModel @Inject constructor(
     fun locationPermissionDenied(): Observable<Unit> {
         return hasLocationPermission.filter(Boolean::not)
             .map { }
+    }
+
+    fun onQuery(query: String) {
+        nameQuery.onNext(query)
     }
 
     override fun onCleared() {

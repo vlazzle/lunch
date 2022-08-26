@@ -11,4 +11,5 @@
     <string name="list">List</string>
     <string name="alltrails_logo">AllTrails logo</string>
     <string name="at_lunch">at Lunch</string>
+    <string name="search_for_restaurant">Search for a restaurant</string>
 </resources>
