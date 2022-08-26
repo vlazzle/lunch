@@ -31,6 +31,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -44,6 +45,7 @@ import coil.compose.AsyncImage
 import com.alltrails.lunch.BuildConfig
 import com.alltrails.lunch.R
 import com.alltrails.lunch.backend.NearbySearchResponse
+import com.alltrails.lunch.backend.PlacePhoto
 import com.alltrails.lunch.core.LatLng
 import com.alltrails.lunch.core.Lce
 import com.alltrails.lunch.core.NearbyPlaces
@@ -231,14 +233,33 @@ private fun PlacesNavHost(
             }
         }
         composable(Routes.PlaceDetail.route) {
-            PlaceDetail(placeId = it.arguments!!.getString(Routes.PlaceDetail.placeId)!!)
+            places.places.find { place ->
+                place.place_id == it.arguments!!.getString(Routes.PlaceDetail.placeId)!!
+            }?.let {
+                PlaceDetail(place = it)
+            }
         }
     }
 }
 
 @Composable
-private fun PlaceDetail(placeId: String) {
-    Text("detail for place $placeId")
+private fun PlaceDetail(place: NearbySearchResponse.Place) {
+    Column(modifier = Modifier.padding(10.dp)) {
+        place.photos?.firstOrNull()?.let { photo ->
+            val itemHeight = 250.dp
+            val photoSizePx = with(LocalDensity.current) {
+                itemHeight.roundToPx()
+            }
+            PlaceImage(
+                photo = photo,
+                placeName = place.name ?: stringResource(R.string.unnamed_place),
+                photoSizePx = photoSizePx,
+                itemHeight = itemHeight
+            )
+        }
+
+        PlaceItem(place = place)
+    }
 }
 
 @Composable
@@ -321,52 +342,17 @@ private fun PlacesList(
                             place.place_id?.let { onNavigateToPlaceDetail(it) }
                         }
                 ) {
-                    val placeName = place.name ?: stringResource(R.string.unnamed_place)
                     val photo = place.photos?.firstOrNull()
                     if (photo != null) {
-                        val sizeParam = if (photo.width > photo.height) {
-                            "maxwidth"
-                        } else {
-                            "maxheight"
-                        }
-                        val url = "https://maps.googleapis.com/maps/api/place/photo?key=${BuildConfig.MAPS_API_KEY}" +
-                                "&$sizeParam=$photoSizePx" +
-                                "&photo_reference=${photo.photo_reference}"
-                        // TODO: investigate loading photo into a pre-measured placeholder using AsyncImagePainter
-                        //  https://coil-kt.github.io/coil/compose/#asyncimagepainter
-                        AsyncImage(
-                            model = url,
-                            contentDescription = stringResource(R.string.place_photo_content_description, placeName),
-                            contentScale = ContentScale.Crop,
-                            alignment = Alignment.Center,
-                            error = ColorPainter(LightGray),
-                            placeholder = ColorPainter(LightGray),
-                            modifier = Modifier
-                                .width(itemHeight)
-                                .height(itemHeight)
+                        PlaceImage(
+                            photo = photo,
+                            placeName = place.name ?: stringResource(R.string.unnamed_place),
+                            photoSizePx = photoSizePx,
+                            itemHeight = itemHeight
                         )
-                        Spacer(modifier = Modifier.width(14.dp))
                     }
 
-                    Column {
-                        Text(
-                            text = placeName,
-                            style = Typography.body1 + TextStyle(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp
-                            )
-                        )
-                        StarRating(
-                            rating = place.rating,
-                            userRatingsTotal = place.user_ratings_total
-                        )
-                        Price(
-                            priceLevel = place.price_level,
-                            // TODO: supporting text
-                            supportingText = "Supporting Text"
-                        )
-                    }
-                    // TODO: heart button
+                    PlaceItem(place = place)
                 }
             }
         }
@@ -380,6 +366,55 @@ private fun PlacesList(
             Text(text = stringResource(R.string.map))
         }
     }
+}
+
+@Composable
+private fun PlaceImage(photo: PlacePhoto, placeName: String, photoSizePx: Int, itemHeight: Dp) {
+    val sizeParam = if (photo.width > photo.height) {
+        "maxwidth"
+    } else {
+        "maxheight"
+    }
+    val url = "https://maps.googleapis.com/maps/api/place/photo?key=${BuildConfig.MAPS_API_KEY}" +
+            "&$sizeParam=$photoSizePx" +
+            "&photo_reference=${photo.photo_reference}"
+    // TODO: investigate loading photo into a pre-measured placeholder using AsyncImagePainter
+    //  https://coil-kt.github.io/coil/compose/#asyncimagepainter
+    AsyncImage(
+        model = url,
+        contentDescription = stringResource(R.string.place_photo_content_description, placeName),
+        contentScale = ContentScale.Crop,
+        alignment = Alignment.Center,
+        error = ColorPainter(LightGray),
+        placeholder = ColorPainter(LightGray),
+        modifier = Modifier
+            .width(itemHeight)
+            .height(itemHeight)
+    )
+    Spacer(modifier = Modifier.width(14.dp))
+}
+
+@Composable
+private fun PlaceItem(place: NearbySearchResponse.Place) {
+    Column {
+        Text(
+            text = place.name ?: stringResource(R.string.unnamed_place),
+            style = Typography.body1 + TextStyle(
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            )
+        )
+        StarRating(
+            rating = place.rating,
+            userRatingsTotal = place.user_ratings_total
+        )
+        Price(
+            priceLevel = place.price_level,
+            // TODO: supporting text
+            supportingText = "Supporting Text"
+        )
+    }
+    // TODO: heart button
 }
 
 @Composable
