@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -204,6 +205,8 @@ private sealed class Routes(val route: String) {
     object PlacesMap : Routes("placesMap")
     object PlaceDetail : Routes("placesDetail/{placeId}") {
         const val placeId = "placeId"
+
+        fun routeWithArgument(placeId: String) = route.replace("{placeId}", placeId)
     }
 }
 
@@ -218,9 +221,9 @@ private fun PlacesNavHost(
         startDestination = startDestination,
     ) {
         composable(Routes.PlacesList.route) {
-            PlacesList(places.places) {
-                navController.navigate(Routes.PlacesMap.route)
-            }
+            PlacesList(places.places,
+                onNavigateToPlacesMap = { navController.navigate(Routes.PlacesMap.route) },
+                onNavigateToPlaceDetail = { navController.navigate(Routes.PlaceDetail.routeWithArgument(it)) })
         }
         composable(Routes.PlacesMap.route) {
             PlacesMap(places.places, places.location) {
@@ -235,16 +238,12 @@ private fun PlacesNavHost(
 
 @Composable
 private fun PlaceDetail(placeId: String) {
-    Text("detail for place $placeId]}")
+    Text("detail for place $placeId")
 }
 
 @Composable
 private fun PlacesMap(places: List<NearbySearchResponse.Place>, location: LatLng, onNavigateToPlacesList: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         val cameraPositionState = rememberCameraPositionState {
             position = CameraPosition.fromLatLngZoom(location.toGoogleMapsLatLng(), 16f)
         }
@@ -293,17 +292,17 @@ private fun PlacesMap(places: List<NearbySearchResponse.Place>, location: LatLng
 }
 
 @Composable
-private fun PlacesList(places: List<NearbySearchResponse.Place>, onNavigateToPlacesMap: () -> Unit) {
+private fun PlacesList(
+    places: List<NearbySearchResponse.Place>,
+    onNavigateToPlacesMap: () -> Unit,
+    onNavigateToPlaceDetail: (String) -> Unit
+) {
     val itemHeight = 77.dp
     val photoSizePx = with(LocalDensity.current) {
         itemHeight.roundToPx()
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             contentPadding = PaddingValues(bottom = 15.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -311,60 +310,61 @@ private fun PlacesList(places: List<NearbySearchResponse.Place>, onNavigateToPla
         ) {
             items(places) { place ->
                 val roundedCornerShape = RoundedCornerShape(7.dp)
-                Box(
+                Row(
                     modifier = Modifier
                         .background(color = Color.White, shape = roundedCornerShape)
                         .border(width = 1.dp, color = LightGray, shape = roundedCornerShape)
                         .padding(vertical = 18.dp, horizontal = 16.dp)
                         .height(itemHeight)
                         .fillMaxWidth()
+                        .clickable {
+                            place.place_id?.let { onNavigateToPlaceDetail(it) }
+                        }
                 ) {
-                    Row {
-                        val placeName = place.name ?: stringResource(R.string.unnamed_place)
-                        val photo = place.photos?.firstOrNull()
-                        if (photo != null) {
-                            val sizeParam = if (photo.width > photo.height) {
-                                "maxwidth"
-                            } else {
-                                "maxheight"
-                            }
-                            val url = "https://maps.googleapis.com/maps/api/place/photo?key=${BuildConfig.MAPS_API_KEY}" +
-                                    "&$sizeParam=$photoSizePx" +
-                                    "&photo_reference=${photo.photo_reference}"
-                            // TODO: investigate loading photo into a pre-measured placeholder using AsyncImagePainter
-                            //  https://coil-kt.github.io/coil/compose/#asyncimagepainter
-                            AsyncImage(
-                                model = url,
-                                contentDescription = stringResource(R.string.place_photo_content_description, placeName),
-                                contentScale = ContentScale.Crop,
-                                alignment = Alignment.Center,
-                                error = ColorPainter(LightGray),
-                                placeholder = ColorPainter(LightGray),
-                                modifier = Modifier
-                                    .width(itemHeight)
-                                    .height(itemHeight)
-                            )
-                            Spacer(modifier = Modifier.width(14.dp))
+                    val placeName = place.name ?: stringResource(R.string.unnamed_place)
+                    val photo = place.photos?.firstOrNull()
+                    if (photo != null) {
+                        val sizeParam = if (photo.width > photo.height) {
+                            "maxwidth"
+                        } else {
+                            "maxheight"
                         }
+                        val url = "https://maps.googleapis.com/maps/api/place/photo?key=${BuildConfig.MAPS_API_KEY}" +
+                                "&$sizeParam=$photoSizePx" +
+                                "&photo_reference=${photo.photo_reference}"
+                        // TODO: investigate loading photo into a pre-measured placeholder using AsyncImagePainter
+                        //  https://coil-kt.github.io/coil/compose/#asyncimagepainter
+                        AsyncImage(
+                            model = url,
+                            contentDescription = stringResource(R.string.place_photo_content_description, placeName),
+                            contentScale = ContentScale.Crop,
+                            alignment = Alignment.Center,
+                            error = ColorPainter(LightGray),
+                            placeholder = ColorPainter(LightGray),
+                            modifier = Modifier
+                                .width(itemHeight)
+                                .height(itemHeight)
+                        )
+                        Spacer(modifier = Modifier.width(14.dp))
+                    }
 
-                        Column {
-                            Text(
-                                text = placeName,
-                                style = Typography.body1 + TextStyle(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp
-                                )
+                    Column {
+                        Text(
+                            text = placeName,
+                            style = Typography.body1 + TextStyle(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
                             )
-                            StarRating(
-                                rating = place.rating,
-                                userRatingsTotal = place.user_ratings_total
-                            )
-                            Price(
-                                priceLevel = place.price_level,
-                                // TODO: supporting text
-                                supportingText = "Supporting Text"
-                            )
-                        }
+                        )
+                        StarRating(
+                            rating = place.rating,
+                            userRatingsTotal = place.user_ratings_total
+                        )
+                        Price(
+                            priceLevel = place.price_level,
+                            // TODO: supporting text
+                            supportingText = "Supporting Text"
+                        )
                     }
                     // TODO: heart button
                 }
@@ -437,6 +437,6 @@ private fun DefaultPreview() {
             NearbySearchResponse.Place("in n out"),
             NearbySearchResponse.Place("chipotle"),
             NearbySearchResponse.Place("popeyes"),
-        )) {}
+        ), {}, {})
     }
 }
