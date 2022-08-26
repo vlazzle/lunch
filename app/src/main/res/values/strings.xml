@@ -9,4 +9,6 @@
     <string name="place_photo_content_description">photo of %s</string>
     <string name="map">Map</string>
     <string name="list">List</string>
+    <string name="alltrails_logo">AllTrails logo</string>
+    <string name="at_lunch">at Lunch</string>
 </resources>

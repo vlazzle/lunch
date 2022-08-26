@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -21,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -114,37 +116,57 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun NearbyPlaces(placesViewModel: PlacesViewModel) {
-    Box {
-        val navController = rememberNavController()
-        val lce: Lce<NearbyPlaces> = placesViewModel.nearbySearch().subscribeAsState(Lce.initial()).value
-        val places: NearbyPlaces?
-        when (lce) {
-            is Lce.Initial -> {
-                val locationPermissionDenied =
-                    placesViewModel.locationPermissionDenied().map { true }.subscribeAsState(false)
-                PlacesInitial(locationPermissionDenied = locationPermissionDenied.value)
-                places = null
-            }
-            is Lce.Loading -> {
-                LinearProgressIndicator(
-                    modifier = Modifier
-                        .zIndex(1f)
-                        .padding(8.dp)
-                        .align(Alignment.BottomCenter)
-                )
-                places = lce.oldContent
-            }
-            is Lce.Content -> {
-                places = lce.content
-            }
-            is Lce.Error -> {
-                Text(text = "error: ${lce.throwable.message}")
-                places = null
-            }
+    Column {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 30.dp)
+        ) {
+            Image(
+                painter = painterResource(R.drawable.ic_alltrails),
+                contentDescription = stringResource(R.string.alltrails_logo)
+            )
+            Text(
+                text = stringResource(R.string.at_lunch),
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(start = 5.dp)
+            )
         }
 
-        if (places != null) {
-            PlacesNavHost(places = places, navController = navController)
+        Box(modifier = Modifier.fillMaxSize()) {
+            val navController = rememberNavController()
+            val lce: Lce<NearbyPlaces> = placesViewModel.nearbySearch().subscribeAsState(Lce.initial()).value
+            val places: NearbyPlaces?
+            when (lce) {
+                is Lce.Initial -> {
+                    val locationPermissionDenied =
+                        placesViewModel.locationPermissionDenied().map { true }.subscribeAsState(false)
+                    PlacesInitial(locationPermissionDenied = locationPermissionDenied.value)
+                    places = null
+                }
+                is Lce.Loading -> {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .zIndex(1f)
+                            .padding(8.dp)
+                            .align(Alignment.BottomCenter)
+                    )
+                    places = lce.oldContent
+                }
+                is Lce.Content -> {
+                    places = lce.content
+                }
+                is Lce.Error -> {
+                    Text(text = "error: ${lce.throwable.message}")
+                    places = null
+                }
+            }
+
+            if (places != null) {
+                PlacesNavHost(places = places, navController = navController)
+            }
         }
     }
 }
@@ -172,7 +194,7 @@ private sealed class Routes(val route: String) {
 private fun PlacesNavHost(
     places: NearbyPlaces,
     navController: NavHostController,
-    startDestination: String = Routes.PlacesMap.route,
+    startDestination: String = Routes.PlacesList.route,
 ) {
     NavHost(
         navController = navController,
@@ -266,7 +288,7 @@ private fun PlacesList(places: List<NearbySearchResponse.Place>, onNavigateToPla
             .fillMaxHeight()
     ) {
         LazyColumn(
-            contentPadding = PaddingValues(vertical = 15.dp),
+            contentPadding = PaddingValues(bottom = 15.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(horizontal = 17.dp)
         ) {
@@ -328,11 +350,6 @@ private fun PlacesList(places: List<NearbySearchResponse.Place>, onNavigateToPla
                         }
                     }
                     // TODO: heart button
-                    Text(
-                        text = "\u2661",
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.align(Alignment.TopEnd)
-                    )
                 }
             }
         }
