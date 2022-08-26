@@ -31,7 +31,7 @@ data class NearbySearchResponse(
         data class Geometry (
             val location: Location
         ){
-            class Location(val lat: Double, val lng: Double)
+            data class Location(val lat: Double, val lng: Double)
         }
 
         data class PlacePhoto(

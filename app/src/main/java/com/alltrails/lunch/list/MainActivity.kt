@@ -45,8 +45,15 @@ import com.alltrails.lunch.ui.theme.DarkYellow
 import com.alltrails.lunch.ui.theme.LightGray
 import com.alltrails.lunch.ui.theme.LunchTheme
 import com.alltrails.lunch.ui.theme.Typography
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLngBounds
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.rememberCameraPositionState
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
+import com.google.android.gms.maps.model.LatLng as GLatLng
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -199,7 +206,42 @@ private fun PlacesMap(places: List<NearbySearchResponse.Place>, location: LatLng
             .fillMaxWidth()
             .fillMaxHeight()
     ) {
-        Text("${places.size} places at $location")
+        val cameraPositionState = rememberCameraPositionState {
+            position = CameraPosition.fromLatLngZoom(location.toGoogleMapsLatLng(), 16f)
+        }
+        GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            cameraPositionState = cameraPositionState,
+            onMapLoaded = {
+                val latLngs = places.mapNotNull { place ->
+                    place.geometry?.location?.run {
+                        GLatLng(lat, lng)
+                    }
+                }
+                var bounds: LatLngBounds? = null
+                if (latLngs.isNotEmpty()) {
+                    bounds = LatLngBounds(latLngs.first(), latLngs.first())
+                    for (latLng in latLngs) {
+                        bounds = bounds!!.including(latLng)
+                    }
+                }
+                if (bounds != null) {
+                    // TODO: figure out how to run this on location update, in spite of rememberCameraPositionState
+                    cameraPositionState.move(CameraUpdateFactory.newLatLngBounds(bounds, 60))
+                }
+            }
+        ) {
+            for (place in places) {
+                if (place.geometry != null) {
+                    Marker(
+                        position = GLatLng(place.geometry.location.lat, place.geometry.location.lng),
+                        title = place.name,
+                        snippet = place.rating?.let { "\u2605".repeat(it.toInt()) }
+                    )
+                }
+            }
+        }
+
         Button(
             onClick = onNavigateToPlacesList,
             modifier = Modifier
